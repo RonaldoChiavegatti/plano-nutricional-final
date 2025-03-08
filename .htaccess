@@ -1,0 +1,113 @@
+# Ativa o módulo de reescrita
+RewriteEngine On
+
+# Define o index padrão
+DirectoryIndex index.php
+
+# Força processamento PHP
+AddHandler application/x-httpd-php .php
+AddType application/x-httpd-php .php
+
+# Configuração de tipos MIME
+<IfModule mod_mime.c>
+    AddType application/javascript .js
+    AddType text/css .css
+    AddType text/html .html
+    AddType application/json .json
+</IfModule>
+
+# Força HTTPS e redireciona para o domínio principal
+RewriteCond %{HTTP_HOST} !^queimadefinitiva\.shop$ [NC,OR]
+RewriteCond %{HTTP_HOST} ^www\. [NC]
+RewriteCond %{HTTPS} off [OR]
+RewriteCond %{HTTP_HOST} ^46\.202\.145\.53
+RewriteRule ^(.*)$ https://queimadefinitiva.shop/$1 [L,R=301]
+
+# Remove www
+RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
+RewriteRule ^(.*)$ https://%1/$1 [R=301,L]
+
+# Regras para servir arquivos estáticos
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Configuração específica para a pasta quiz
+<Directory "/quiz">
+    Options -Indexes +FollowSymLinks
+    AllowOverride All
+    Require all granted
+    
+    <FilesMatch "\.(js)$">
+        ForceType application/javascript
+        Header set Content-Type application/javascript
+    </FilesMatch>
+</Directory>
+
+# Tipos MIME para imagens WebP
+AddType image/webp .webp
+
+# Configuração de CORS para imagens
+<FilesMatch "\.(jpg|jpeg|png|gif|webp)$">
+    Header set Access-Control-Allow-Origin "*"
+</FilesMatch>
+
+# Previne listagem de diretórios
+Options -Indexes
+
+# Protege arquivos sensíveis
+<FilesMatch "^(\.env|\.git|composer\.json|package\.json|node_modules|scripts)">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Headers de segurança
+<IfModule mod_headers.c>
+    Header set X-XSS-Protection "1; mode=block"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-Content-Type-Options "nosniff"
+    Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# PHP Config
+php_flag display_errors off
+php_value max_execution_time 300
+php_value max_input_time 300
+php_value memory_limit 256M
+php_value post_max_size 64M
+php_value upload_max_filesize 64M
+
+# Tipos MIME corretos
+AddType application/json .json
+
+# Permitir acesso aos arquivos estáticos
+<FilesMatch "\.(css|js|jpg|jpeg|png|gif|webp)$">
+    Order allow,deny
+    Allow from all
+    
+    # Força tipo MIME correto para JavaScript
+    <If "%{REQUEST_URI} =~ /\.js$/">
+        ForceType application/javascript
+        Header set Content-Type application/javascript
+    </If>
+</FilesMatch>
+
+# Diretório dist acessível
+<Directory "/dist">
+    Options -Indexes
+    Allow from all
+</Directory>
+
+# Garante que o PHP seja processado
+AddHandler application/x-httpd-php .php
+AddType application/x-httpd-php .php
+
+# Redirecionar requisições da API para o proxy.php
+RewriteCond %{REQUEST_URI} ^/api/
+RewriteRule ^api/(.*)$ proxy.php [L,QSA]
+
+# Redirecionar todas as outras requisições para o index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [L,QSA] 

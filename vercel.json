@@ -51,45 +51,38 @@
           "value": "nosniff"
         }
       ]
+    },
+    {
+      "source": "/style.css",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/css"
+        }
+      ]
+    },
+    {
+      "source": "/pixel-loader.js",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript"
+        }
+      ]
     }
   ],
-  "outputDirectory": ".",
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "/server.js"
+      "source": "/api/(.*)",
+      "destination": "/server.js"
     },
     {
-      "src": "/quiz/config.js",
-      "dest": "/server.js"
+      "source": "/quiz/config.js",
+      "destination": "/server.js"
     },
     {
-      "src": "^/style\\.css$",
-      "headers": { 
-        "content-type": "text/css",
-        "Access-Control-Allow-Origin": "*"
-      },
-      "dest": "/style.css"
-    },
-    {
-      "src": "^/pixel-loader\\.js$",
-      "headers": { 
-        "content-type": "application/javascript",
-        "Access-Control-Allow-Origin": "*"
-      },
-      "dest": "/pixel-loader.js"
-    },
-    {
-      "src": "/assets/(.*)",
-      "dest": "/assets/$1"
-    },
-    {
-      "src": "/quiz/(.*)",
-      "dest": "/quiz/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/server.js"
+      "source": "/(.*)",
+      "destination": "/server.js"
     }
   ]
 } 

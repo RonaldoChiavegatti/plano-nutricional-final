@@ -61,20 +61,6 @@
 
     <!-- Script de proteção contra cópia -->
     <script>
-        // Função para descriptografar links
-        function decryptLink(encryptedLink) {
-            try {
-                // Decodifica o link usando uma chave única do seu domínio
-                const domain = window.location.hostname;
-                if (!domain.includes('queimadefinitiva.shop') && !domain.includes('localhost')) {
-                    return 'https://go.perfectpay.com.br/PPU38CPIB8O'; // Link padrão que mantém seu ganho
-                }
-                return encryptedLink;
-            } catch (e) {
-                return 'https://go.perfectpay.com.br/PPU38CPIB8O'; // Link padrão em caso de erro
-            }
-        }
-
         // Função para validar e atualizar links
         function validateCheckoutLinks() {
             const links = {
@@ -83,18 +69,18 @@
                 '47.00': 'https://go.perfectpay.com.br/PPU38CPIEN1'
             };
 
-            // Monitora mudanças nos links a cada 2 segundos
-            setInterval(() => {
-                document.querySelectorAll('.plan-button').forEach(button => {
+            document.querySelectorAll('.plan-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
                     const price = button.closest('.plan-card').querySelector('.current').textContent
                         .replace('R$ ', '').replace(',', '.');
                     
-                    const correctLink = links[price];
-                    if (correctLink && button.getAttribute('href') !== correctLink) {
-                        button.setAttribute('href', correctLink);
+                    const checkoutUrl = links[price];
+                    if (checkoutUrl) {
+                        window.location.href = checkoutUrl;
                     }
                 });
-            }, 2000);
+            });
         }
 
         // Função para prevenir inspeção
@@ -112,19 +98,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             validateCheckoutLinks();
             preventInspection();
-            
-            // Ofusca os links no código fonte
-            document.querySelectorAll('.plan-button').forEach(button => {
-                const originalHref = button.getAttribute('href');
-                button.setAttribute('data-href', originalHref);
-                button.removeAttribute('href');
-                
-                button.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const href = decryptLink(button.getAttribute('data-href'));
-                    window.location.href = href;
-                });
-            });
         });
     </script>
 </head>
@@ -243,7 +216,7 @@
                             <div class="current">R$ 27,00</div>
                             <div class="discount">50% OFF</div>
                         </div>
-                        <a href="https://go.perfectpay.com.br/PPU38CPIB8O" data-checkout="true" class="plan-button">Quero esse!</a>
+                        <a href="https://go.perfectpay.com.br/PPU38CPIB8O" target="_blank" rel="noopener" class="plan-button">Quero esse!</a>
                     </div>
                     
                     <div class="plan-card featured">
@@ -254,7 +227,7 @@
                             <div class="current">R$ 47,00</div>
                             <div class="discount">87% OFF</div>
                         </div>
-                        <a href="https://go.perfectpay.com.br/PPU38CPIEN1" data-checkout="true" class="plan-button">Quero esse!</a>
+                        <a href="https://go.perfectpay.com.br/PPU38CPIEN1" target="_blank" rel="noopener" class="plan-button">Quero esse!</a>
                     </div>
                     
                     <div class="plan-card">
@@ -265,7 +238,7 @@
                             <div class="current">R$ 39,90</div>
                             <div class="discount">75% OFF</div>
                         </div>
-                        <a href="https://go.perfectpay.com.br/PPU38CPIEMR" data-checkout="true" class="plan-button">Quero esse!</a>
+                        <a href="https://go.perfectpay.com.br/PPU38CPIEMR" target="_blank" rel="noopener" class="plan-button">Quero esse!</a>
                     </div>
                 </div>
             </div>

@@ -78,9 +78,9 @@
         // Função para validar e atualizar links
         function validateCheckoutLinks() {
             const links = {
-                '27.00': 'PPU38CPIB8O',
-                '39.90': 'PPU38CPIEMR',
-                '47.00': 'PPU38CPIEN1'
+                '27.00': 'https://go.perfectpay.com.br/PPU38CPIB8O',
+                '39.90': 'https://go.perfectpay.com.br/PPU38CPIEMR',
+                '47.00': 'https://go.perfectpay.com.br/PPU38CPIEN1'
             };
 
             // Monitora mudanças nos links a cada 2 segundos
@@ -89,14 +89,9 @@
                     const price = button.closest('.plan-card').querySelector('.current').textContent
                         .replace('R$ ', '').replace(',', '.');
                     
-                    const correctId = links[price];
-                    if (correctId) {
-                        const currentHref = button.getAttribute('href');
-                        const correctHref = `https://go.perfectpay.com.br/${correctId}`;
-                        
-                        if (!currentHref.includes(correctId)) {
-                            button.setAttribute('href', correctHref);
-                        }
+                    const correctLink = links[price];
+                    if (correctLink && button.getAttribute('href') !== correctLink) {
+                        button.setAttribute('href', correctLink);
                     }
                 });
             }, 2000);
@@ -248,7 +243,7 @@
                             <div class="current">R$ 27,00</div>
                             <div class="discount">50% OFF</div>
                         </div>
-                        <a data-checkout="true" class="plan-button">Quero esse!</a>
+                        <a href="https://go.perfectpay.com.br/PPU38CPIB8O" data-checkout="true" class="plan-button">Quero esse!</a>
                     </div>
                     
                     <div class="plan-card featured">
@@ -259,7 +254,7 @@
                             <div class="current">R$ 47,00</div>
                             <div class="discount">87% OFF</div>
                         </div>
-                        <a data-checkout="true" class="plan-button">Quero esse!</a>
+                        <a href="https://go.perfectpay.com.br/PPU38CPIEN1" data-checkout="true" class="plan-button">Quero esse!</a>
                     </div>
                     
                     <div class="plan-card">
@@ -270,7 +265,7 @@
                             <div class="current">R$ 39,90</div>
                             <div class="discount">75% OFF</div>
                         </div>
-                        <a data-checkout="true" class="plan-button">Quero esse!</a>
+                        <a href="https://go.perfectpay.com.br/PPU38CPIEMR" data-checkout="true" class="plan-button">Quero esse!</a>
                     </div>
                 </div>
             </div>

@@ -10,7 +10,9 @@ const PORT = process.env.PORT || 3001;
 
 // Configurações de segurança
 app.use(helmet({
-    contentSecurityPolicy: false
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    crossOriginOpenerPolicy: { policy: "unsafe-none" }
 }));
 
 // Rate limiting
@@ -21,8 +23,23 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // CORS
-app.use(cors());
+const corsOptions = {
+    origin: ['https://queimadefinitiva.shop', 'https://www.queimadefinitiva.shop', 'http://queimadefinitiva.shop', 'http://www.queimadefinitiva.shop'],
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+    optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
 app.use(express.json());
+
+// Middleware para adicionar headers de acesso
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    next();
+});
 
 // Configuração de MIME types
 express.static.mime.define({'text/css': ['css']});

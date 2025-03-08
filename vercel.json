@@ -4,13 +4,59 @@
     {
       "src": "server.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "*.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "assets/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "quiz/**",
+      "use": "@vercel/static"
     }
   ],
   "outputDirectory": ".",
   "routes": [
     {
+      "src": "/api/(.*)",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/quiz/config.js",
+      "dest": "/server.js"
+    },
+    {
+      "src": "^/style\\.css$",
+      "headers": { "content-type": "text/css" },
+      "dest": "/style.css"
+    },
+    {
+      "src": "^/pixel-loader\\.js$",
+      "headers": { "content-type": "application/javascript" },
+      "dest": "/pixel-loader.js"
+    },
+    {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
+      "src": "/quiz/(.*)",
+      "dest": "/quiz/$1"
+    },
+    {
       "src": "/(.*)",
-      "dest": "server.js"
+      "dest": "/server.js"
     }
   ]
 } 

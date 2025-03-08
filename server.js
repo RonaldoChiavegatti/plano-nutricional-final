@@ -24,8 +24,35 @@ app.use(limiter);
 app.use(cors());
 app.use(express.json());
 
-// Arquivos estáticos
-app.use(express.static(path.join(__dirname)));
+// Configuração de MIME types
+express.static.mime.define({'text/css': ['css']});
+express.static.mime.define({'application/javascript': ['js']});
+
+// Arquivos estáticos com configuração de cache e MIME types
+app.use(express.static(path.join(__dirname), {
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.css')) {
+            res.setHeader('Content-Type', 'text/css');
+        }
+        if (filePath.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript');
+        }
+        if (filePath.match(/\.(jpg|jpeg|png|gif|webp|ico)$/)) {
+            res.setHeader('Cache-Control', 'public, max-age=31536000');
+        }
+    }
+}));
+
+// Rotas específicas para arquivos críticos
+app.get('/style.css', (req, res) => {
+    res.setHeader('Content-Type', 'text/css');
+    res.sendFile(path.join(__dirname, 'style.css'));
+});
+
+app.get('/pixel-loader.js', (req, res) => {
+    res.setHeader('Content-Type', 'application/javascript');
+    res.sendFile(path.join(__dirname, 'pixel-loader.js'));
+});
 
 // Rotas da API
 app.get('/api/health', (req, res) => {
@@ -63,15 +90,15 @@ app.get('/api/validate-checkout', (req, res) => {
     });
 });
 
-// Rotas para config.js dinâmico
+// Rota para config.js dinâmico
 app.get('/quiz/config.js', (req, res) => {
+    res.setHeader('Content-Type', 'application/javascript');
     const configScript = `
         window.config = {
             apiUrl: '${process.env.API_URL || ''}'
         };
         window.dispatchEvent(new Event('config:loaded'));
     `;
-    res.type('application/javascript');
     res.send(configScript);
 });
 

@@ -8,8 +8,7 @@
   },
   "scripts": {
     "dev": "nodemon server.js",
-    "start": "node server.js",
-    "build": "echo 'No build step needed'"
+    "start": "node server.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

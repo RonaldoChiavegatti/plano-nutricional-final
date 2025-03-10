@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Responda nosso questionário personalizado e descubra o programa ideal para atingir seus objetivos de emagrecimento.">
+    <meta name="keywords" content="quiz emagrecimento, programa personalizado, perda de peso">
+    <meta property="og:title" content="Quiz Personalizado - Queima Definitiva">
+    <meta property="og:description" content="Descubra seu programa personalizado de emagrecimento respondendo algumas perguntas simples.">
+    <meta property="og:image" content="../assets/logo.png">
+    <meta property="og:url" content="https://seudominio.com/quiz/play">
+    <title>Quiz Personalizado | Queima Definitiva</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="../assets/logo.png">
+    
+    <!-- Carregamento dos scripts em ordem -->
+    <script src="../env.js" defer></script>
+    
+    <!-- Facebook Pixel Code -->
+    <script>
+        !function(f,b,e,v,n,t,s) {
+            if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+            n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t,s);
+        }(window, document,'script','https://connect.facebook.net/en_US/fbevents.js');
+        
+        fbq('init', '622557317228832');
+        fbq('track', 'PageView');
+    </script>
+    <noscript>
+        <img height="1" width="1" style="display:none" 
+            src="https://www.facebook.com/tr?id=622557317228832&ev=PageView&noscript=1"/>
+    </noscript>
+    <!-- End Facebook Pixel Code -->
+
+    <!-- Carrega config.js primeiro -->
+    <script src="/quiz/config.js"></script>
+    <!-- Depois carrega o pixel-loader.js -->
+    <script type="module">
+        import { initializePixel, trackQuizProgress, trackQuizComplete, trackViewContent } from '/pixel-loader.js';
+        
+        // Aguarda o carregamento do config.js
+        window.addEventListener('config:loaded', () => {
+            // Inicializa o pixel quando a configuração estiver carregada
+            initializePixel();
+            
+            // Rastreia visualização da página do quiz
+            trackViewContent('Quiz em Andamento', 'quiz_progress');
+            
+            // Função para atualizar o progresso
+            function updateQuizProgress() {
+                const progressElement = document.querySelector('.quiz-progress');
+                if (progressElement) {
+                    const [current, total] = progressElement.textContent.split('/').map(Number);
+                    const progress = Math.round((current / total) * 100);
+                    
+                    // Rastreia o progresso no Facebook Pixel
+                    fbq('trackCustom', 'QuizProgress', {
+                        step: current,
+                        total_steps: total,
+                        progress_percentage: progress,
+                        content_name: 'Progresso do Quiz',
+                        content_category: 'Quiz',
+                        question_number: current,
+                        total_questions: total
+                    });
+
+                    // Também usa a função de rastreamento do módulo
+                    trackQuizProgress(current, total, {
+                        content_name: 'Progresso do Quiz',
+                        content_category: 'Quiz',
+                        progress_percentage: progress,
+                        question_number: current,
+                        total_questions: total
+                    });
+
+                    // Salva o progresso no localStorage
+                    localStorage.setItem('quizProgress', JSON.stringify({
+                        current,
+                        total,
+                        progress,
+                        timestamp: new Date().toISOString()
+                    }));
+                }
+            }
+
+            // Monitora cliques no botão próximo
+            document.getElementById('next-button')?.addEventListener('click', () => {
+                updateQuizProgress();
+            });
+
+            // Monitora mudanças nas respostas
+            document.querySelector('.answer-options')?.addEventListener('change', (event) => {
+                if (event.target.type === 'checkbox' || event.target.type === 'radio') {
+                    const question = document.querySelector('.question').textContent;
+                    const answer = event.target.value;
+                    
+                    // Rastreia a resposta específica
+                    fbq('trackCustom', 'QuizAnswer', {
+                        question: question,
+                        answer: answer,
+                        content_category: 'Quiz',
+                        content_name: 'Resposta do Quiz'
+                    });
+
+                    updateQuizProgress();
+                }
+            });
+
+            // Verifica se há progresso salvo e atualiza
+            const savedProgress = localStorage.getItem('quizProgress');
+            if (savedProgress) {
+                const { current, total, progress } = JSON.parse(savedProgress);
+                trackQuizProgress(current, total, {
+                    content_name: 'Retorno ao Quiz',
+                    content_category: 'Quiz',
+                    progress_percentage: progress,
+                    question_number: current,
+                    total_questions: total,
+                    is_resume: true
+                });
+            }
+        });
+
+        // Expõe função para o script.js usar
+        window.trackQuizComplete = (respostas) => {
+            // Rastreia a conclusão diretamente com o Facebook Pixel
+            fbq('trackCustom', 'QuizComplete', {
+                content_name: 'Quiz Completado',
+                content_category: 'Quiz',
+                success: true,
+                answers: respostas
+            });
+
+            // Também usa a função de rastreamento do módulo
+            trackQuizComplete({
+                content_name: 'Quiz Completado',
+                content_category: 'Quiz',
+                success: true,
+                respostas: respostas
+            });
+
+            // Limpa o progresso salvo
+            localStorage.removeItem('quizProgress');
+        };
+    </script>
+</head>
+<body>
+    <header>
+        <div class="back-button">&lt Back</div>
+        <div class="logo">
+            <a href="../index.html">
+                <img src="../assets/logo.png" alt="Queima Definitiva">
+            </a>
+        </div>
+    </header>
+
+    <main>
+        <section class="quiz">
+            <h1 class="question">Qual é o seu objetivo principal?</h1>
+            <div class="answer-options">
+                <div class="answer-option">
+                    <input type="checkbox" id="perder-peso" name="question4" value="perder-peso">
+                    <div class="answer-option-text">
+                        <span class="answer-option-title">Perder Peso</span>
+                        <span class="answer-option-description">Comece a queimar calorias e a derreter gordura</span>
+                    </div>
+                </div>
+                <div class="answer-option">
+                    <input type="checkbox" id="ficar-forte" name="question4" value="ficar-forte">
+                    <div class="answer-option-text">
+                        <span class="answer-option-title">Ficar Forte</span>
+                        <span class="answer-option-description">Corpo forte, tonificado e saudável</span>
+                    </div>
+                </div>
+                <div class="answer-option">
+                    <input type="checkbox" id="desenvolver-habito" name="question4" value="desenvolver-habito">
+                    <div class="answer-option-text">
+                        <span class="answer-option-title">Desenvolver Hábito</span>
+                        <span class="answer-option-description">Diga não aos desejos por comida</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <button id="next-button" style="display: none;">PRÓXIMO PASSO</button>
+    </main>
+    
+    <!-- Carrega o script principal por último e com defer -->
+    <script src="script.js" defer></script>
+</body>
+</html>

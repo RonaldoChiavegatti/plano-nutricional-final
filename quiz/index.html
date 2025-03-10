@@ -38,6 +38,10 @@
     <script type="module">
         import { initializePixel, trackViewContent, trackLead } from '/pixel-loader.js';
         
+        // Variáveis para controle de tempo
+        let startTime = Date.now();
+        let timeOnPageInterval;
+        
         // Aguarda o carregamento do config.js
         window.addEventListener('config:loaded', () => {
             // Inicializa o pixel quando a configuração estiver carregada
@@ -45,24 +49,56 @@
             
             // Rastreia visualização da página
             trackViewContent('Quiz Inicial', 'quiz_start');
+            fbq('track', 'ViewContent', {
+                content_name: 'Quiz Inicial',
+                content_category: 'Quiz',
+                content_type: 'quiz_start',
+                time_spent: 0
+            });
+            
+            // Inicia o rastreamento de tempo na página
+            timeOnPageInterval = setInterval(() => {
+                const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+                if (timeSpent <= 300) { // Rastreia até 5 minutos
+                    fbq('trackCustom', 'TimeOnPage', {
+                        seconds: timeSpent,
+                        page: 'quiz_start',
+                        content_name: 'Quiz Inicial'
+                    });
+                } else {
+                    clearInterval(timeOnPageInterval);
+                }
+            }, 30000); // A cada 30 segundos
             
             // Rastreia quando o usuário clica para começar o quiz
             document.querySelector('.continue-button')?.addEventListener('click', (e) => {
                 e.preventDefault();
                 
-                // Registra o evento e navega
+                const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+                
+                // Registra o evento Lead
                 fbq('track', 'Lead', {
                     content_name: 'Início do Quiz',
                     content_category: 'Quiz',
                     value: 0,
-                    currency: 'BRL'
+                    currency: 'BRL',
+                    time_spent: timeSpent
                 });
                 
+                // Registra o evento StartQuiz
+                fbq('trackCustom', 'StartQuiz', {
+                    content_name: 'Início do Quiz',
+                    content_category: 'Quiz',
+                    time_spent: timeSpent
+                });
+                
+                // Usa a função de rastreamento do módulo
                 trackLead({
                     content_name: 'Início do Quiz',
                     content_category: 'Quiz',
                     value: 0,
-                    currency: 'BRL'
+                    currency: 'BRL',
+                    time_spent: timeSpent
                 });
                 
                 // Pequeno delay para garantir que o evento seja enviado
@@ -70,6 +106,27 @@
                     window.location.href = 'play.html';
                 }, 300);
             });
+
+            // Rastreia cliques em elementos da página
+            document.addEventListener('click', (e) => {
+                const target = e.target;
+                
+                // Rastreia cliques no logo
+                if (target.closest('.logo')) {
+                    fbq('trackCustom', 'LogoClick', {
+                        content_name: 'Quiz Inicial',
+                        content_category: 'Navigation',
+                        time_spent: Math.floor((Date.now() - startTime) / 1000)
+                    });
+                }
+            });
+        });
+
+        // Limpa o intervalo quando a página é fechada
+        window.addEventListener('beforeunload', () => {
+            if (timeOnPageInterval) {
+                clearInterval(timeOnPageInterval);
+            }
         });
     </script>
 

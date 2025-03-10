@@ -42,6 +42,10 @@
     <script type="module">
         import { initializePixel, trackQuizProgress, trackQuizComplete, trackViewContent } from '/pixel-loader.js';
         
+        // Variáveis para controle de tempo
+        let startTime = Date.now();
+        let timeOnPageInterval;
+        
         // Aguarda o carregamento do config.js
         window.addEventListener('config:loaded', () => {
             // Inicializa o pixel quando a configuração estiver carregada
@@ -49,6 +53,19 @@
             
             // Rastreia visualização da página do quiz
             trackViewContent('Quiz em Andamento', 'quiz_progress');
+            
+            // Inicia o rastreamento de tempo na página
+            timeOnPageInterval = setInterval(() => {
+                const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+                if (timeSpent <= 300) { // Rastreia até 5 minutos
+                    fbq('trackCustom', 'TimeOnPage', {
+                        seconds: timeSpent,
+                        page: 'quiz_progress'
+                    });
+                } else {
+                    clearInterval(timeOnPageInterval);
+                }
+            }, 30000); // A cada 30 segundos
             
             // Função para atualizar o progresso
             function updateQuizProgress() {
@@ -65,16 +82,8 @@
                         content_name: 'Progresso do Quiz',
                         content_category: 'Quiz',
                         question_number: current,
-                        total_questions: total
-                    });
-
-                    // Também usa a função de rastreamento do módulo
-                    trackQuizProgress(current, total, {
-                        content_name: 'Progresso do Quiz',
-                        content_category: 'Quiz',
-                        progress_percentage: progress,
-                        question_number: current,
-                        total_questions: total
+                        total_questions: total,
+                        time_spent: Math.floor((Date.now() - startTime) / 1000)
                     });
 
                     // Salva o progresso no localStorage
@@ -103,7 +112,8 @@
                         question: question,
                         answer: answer,
                         content_category: 'Quiz',
-                        content_name: 'Resposta do Quiz'
+                        content_name: 'Resposta do Quiz',
+                        time_spent: Math.floor((Date.now() - startTime) / 1000)
                     });
 
                     updateQuizProgress();
@@ -120,8 +130,16 @@
                     progress_percentage: progress,
                     question_number: current,
                     total_questions: total,
-                    is_resume: true
+                    is_resume: true,
+                    time_spent: Math.floor((Date.now() - startTime) / 1000)
                 });
+            }
+        });
+
+        // Limpa o intervalo quando a página é fechada
+        window.addEventListener('beforeunload', () => {
+            if (timeOnPageInterval) {
+                clearInterval(timeOnPageInterval);
             }
         });
 

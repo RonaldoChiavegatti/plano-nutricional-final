@@ -332,6 +332,17 @@ const quizData = [
 
 let currentQuestion = 0;
 const progressBar = document.getElementById("progress-bar");
+let lastTrackedQuestion = 0;
+
+function trackQuizEvent(eventName, data = {}) {
+    if (typeof fbq !== 'undefined') {
+        fbq('trackCustom', eventName, {
+            ...data,
+            timestamp: new Date().toISOString()
+        });
+        console.log(`Evento ${eventName} rastreado:`, data);
+    }
+}
 
 function showInfoScreen() {
     const questionElement = document.querySelector(".question");
@@ -763,6 +774,17 @@ function loadQuestion(questionIndex) {
     // Salva a questão atual no localStorage
     localStorage.setItem('currentQuestionIndex', questionIndex);
 
+    // Rastreia progresso do quiz
+    if (questionIndex > lastTrackedQuestion) {
+        lastTrackedQuestion = questionIndex;
+        const progress = Math.round((questionIndex / quizData.length) * 100);
+        trackQuizEvent('QuizProgress', {
+            question_number: questionIndex,
+            total_questions: quizData.length,
+            progress_percentage: progress
+        });
+    }
+
     if (questionIndex === 20) {
         showInfoScreen();
         return;
@@ -841,9 +863,14 @@ function loadQuestion(questionIndex) {
                     if (currentQuestion < quizData.length - 1) {
                         loadQuestion(currentQuestion + 1);
                     } else {
+                        // Rastreia conclusão do quiz
+                        trackQuizEvent('QuizComplete', {
+                            total_questions_answered: quizData.length,
+                            time_spent: Math.floor((Date.now() - startTime) / 1000)
+                        });
+                        
                         // Limpa o localStorage quando o quiz é concluído
                         localStorage.removeItem('currentQuestionIndex');
-                        alert("Quiz concluído!");
                     }
                 }, 300);
             });
@@ -888,7 +915,7 @@ function loadQuestion(questionIndex) {
             `;
 
             answerDiv.addEventListener("click", () => {
-                // Se for a primeira pergunta (objetivo principal), salva o objetivo
+                // Se for a primeira pergunta (objetivo principal), salva o objetivo e rastreia
                 if (currentQuestion === 0) {
                     let userGoal = 'perder-peso';
                     switch(answer.text.toLowerCase()) {
@@ -903,14 +930,34 @@ function loadQuestion(questionIndex) {
                             break;
                     }
                     localStorage.setItem('userGoal', userGoal);
+                    
+                    // Rastreia a seleção do objetivo
+                    trackQuizEvent('QuizGoalSelected', {
+                        goal: userGoal,
+                        question: quizData[currentQuestion].question,
+                        answer: answer.text
+                    });
                 }
+
+                // Rastreia cada resposta
+                trackQuizEvent('QuizAnswer', {
+                    question_number: currentQuestion + 1,
+                    question: quizData[currentQuestion].question,
+                    answer: answer.text,
+                    total_questions: quizData.length
+                });
 
                 if (currentQuestion < quizData.length - 1) {
                     loadQuestion(currentQuestion + 1);
                 } else {
+                    // Rastreia conclusão do quiz
+                    trackQuizEvent('QuizComplete', {
+                        total_questions_answered: quizData.length,
+                        time_spent: Math.floor((Date.now() - startTime) / 1000)
+                    });
+                    
                     // Limpa o localStorage quando o quiz é concluído
                     localStorage.removeItem('currentQuestionIndex');
-                    alert("Quiz concluído!");
                 }
             });
         }

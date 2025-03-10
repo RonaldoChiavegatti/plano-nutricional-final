@@ -39,6 +39,11 @@
     <script type="module">
         import { initializePixel, trackPlanView, trackAddToCart, trackPurchase, trackViewContent } from '/pixel-loader.js';
         
+        // Variáveis para controle de tempo
+        let startTime = Date.now();
+        let timeOnPageInterval;
+        let lastScrollDepth = 0;
+        
         // Aguarda o carregamento do config.js
         window.addEventListener('config:loaded', () => {
             initializePixel();
@@ -47,9 +52,28 @@
             const quizData = JSON.parse(localStorage.getItem('quizData') || '{}');
             
             // Rastreia visualização da página de checkout
-            trackViewContent('Página de Checkout', 'checkout', {
-                quiz_data: quizData
+            fbq('track', 'ViewContent', {
+                content_name: 'Página de Checkout',
+                content_type: 'checkout',
+                content_category: 'Checkout',
+                quiz_data: quizData,
+                time_spent: 0
             });
+            
+            // Inicia o rastreamento de tempo na página
+            timeOnPageInterval = setInterval(() => {
+                const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+                if (timeSpent <= 300) { // Rastreia até 5 minutos
+                    fbq('trackCustom', 'TimeOnCheckout', {
+                        seconds: timeSpent,
+                        content_category: 'Engagement',
+                        content_name: 'Tempo no Checkout',
+                        quiz_data: quizData
+                    });
+                } else {
+                    clearInterval(timeOnPageInterval);
+                }
+            }, 30000); // A cada 30 segundos
             
             // Rastreia visualização dos planos
             document.querySelectorAll('.plan-card').forEach(plan => {
@@ -63,7 +87,7 @@
                 const discount = plan.querySelector('.discount').textContent
                     .replace(' OFF', '');
                 
-                // Rastreia visualização do plano com Facebook Pixel
+                // Rastreia visualização do plano
                 fbq('track', 'ViewContent', {
                     content_name: planType,
                     content_type: 'product',
@@ -72,7 +96,8 @@
                     currency: 'BRL',
                     original_price: parseFloat(originalPrice),
                     discount_percentage: discount,
-                    quiz_data: quizData
+                    quiz_data: quizData,
+                    time_spent: Math.floor((Date.now() - startTime) / 1000)
                 });
 
                 // Rastreia com o módulo também
@@ -82,7 +107,8 @@
                     value: parseFloat(price),
                     currency: 'BRL',
                     original_price: parseFloat(originalPrice),
-                    discount_percentage: discount
+                    discount_percentage: discount,
+                    time_spent: Math.floor((Date.now() - startTime) / 1000)
                 });
             });
             
@@ -113,7 +139,7 @@
                         // Gera ID único para a transação
                         const transactionId = `CHECKOUT_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
                         
-                        // Rastreia início do checkout com Facebook Pixel
+                        // Rastreia início do checkout
                         fbq('track', 'InitiateCheckout', {
                             content_name: planType,
                             content_type: 'product',
@@ -124,7 +150,20 @@
                             discount_percentage: discount,
                             transaction_id: transactionId,
                             quiz_data: quizData,
-                            num_items: 1
+                            num_items: 1,
+                            time_spent: Math.floor((Date.now() - startTime) / 1000)
+                        });
+
+                        // Rastreia adição ao carrinho
+                        fbq('track', 'AddToCart', {
+                            content_name: planType,
+                            content_type: 'product',
+                            content_category: 'Plano',
+                            value: priceValue,
+                            currency: 'BRL',
+                            transaction_id: transactionId,
+                            quiz_data: quizData,
+                            time_spent: Math.floor((Date.now() - startTime) / 1000)
                         });
 
                         // Salva dados da transação no localStorage
@@ -159,39 +198,34 @@
                     fbq('trackCustom', 'FAQInteraction', {
                         question: questionText,
                         content_category: 'FAQ',
-                        content_name: 'Interação FAQ'
-                    });
-                    
-                    // Registra no console para debug
-                    console.log('FAQ Interaction:', {
-                        question: questionText,
-                        content_category: 'FAQ',
-                        content_name: 'Interação FAQ'
+                        content_name: 'Interação FAQ',
+                        time_spent: Math.floor((Date.now() - startTime) / 1000),
+                        quiz_data: quizData
                     });
                 });
             });
 
-            // Rastreia tempo na página com confirmação de registro
-            let timeSpent = 0;
-            const timeInterval = setInterval(() => {
-                timeSpent += 30;
-                if (timeSpent <= 300) { // Rastreia até 5 minutos
-                    fbq('trackCustom', 'TimeOnCheckout', {
-                        seconds: timeSpent,
+            // Rastreia profundidade de rolagem
+            window.addEventListener('scroll', () => {
+                const scrollPercentage = Math.round((window.scrollY + window.innerHeight) / document.documentElement.scrollHeight * 100);
+                if (scrollPercentage > lastScrollDepth && scrollPercentage % 25 === 0) {
+                    lastScrollDepth = scrollPercentage;
+                    fbq('trackCustom', 'ScrollDepth', {
+                        depth: scrollPercentage,
                         content_category: 'Engagement',
-                        content_name: 'Tempo no Checkout'
+                        content_name: 'Profundidade de Rolagem',
+                        time_spent: Math.floor((Date.now() - startTime) / 1000),
+                        quiz_data: quizData
                     });
-                    
-                    // Registra no console para debug
-                    console.log('Time on Checkout:', {
-                        seconds: timeSpent,
-                        content_category: 'Engagement',
-                        content_name: 'Tempo no Checkout'
-                    });
-                } else {
-                    clearInterval(timeInterval);
                 }
-            }, 30000); // A cada 30 segundos
+            });
+        });
+
+        // Limpa o intervalo quando a página é fechada
+        window.addEventListener('beforeunload', () => {
+            if (timeOnPageInterval) {
+                clearInterval(timeOnPageInterval);
+            }
         });
     </script>
 
